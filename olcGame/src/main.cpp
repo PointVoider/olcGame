@@ -59,17 +59,24 @@ public:
 		MBtn btn;
 		vector<int> steps;
 	};
-
+	struct sHints
+	{
+		vector<sHint> hint;
+	};
 public:
 	vector<sCell> cells;
 	int nTotalCell;
 	int nCellOn;
 	int nScore;
+	int nStep;
 	float fDelay;
 	bool bPaused = false;
 	fstream file;
 
-	vector<sHint> hint;
+	vector<sHint> hint1;
+	vector<sHint> hint2;
+	vector<sHint> hint3;
+	vector<sHints> hints;
 public:
 	void ReSetCells(int& nSize)
 	{
@@ -79,6 +86,7 @@ public:
 		if (!cells.empty())	cells.clear();
 		cells.reserve(nSize * nSize);
 
+		nStep = hints.at(cellSize - hints.size()).hint.front().steps.size();
 		nCellOn = nScore = 0;
 		nTotalCell = nSize * nSize;
 		fDelay = 3.f;
@@ -108,11 +116,18 @@ public:
 
 	bool OnUserCreate() override
 	{
-		ReSetCells(cellSize);
 		sHint t = { LMB,{0,2,8,6,4} };
-		hint.push_back(t);
+		hint1.push_back(t);
+		sHint tt = { LMB,{0,3,9,10,13,14} };
+		hint2.push_back(tt);
+		sHint ttt = { LMB,{0,4,7,20,24,17,11,13} };
+		sHint ttt2 = { RMB,{12} };
+		hint3 = { ttt,ttt2 };
 
+
+		hints = { { hint1 }, { hint2 }, { hint3 } };
 		//file.open("Steps.txt", ios::app);
+		ReSetCells(cellSize);
 		return true;
 	}
 
@@ -271,7 +286,6 @@ public:
 		Clear(olc::VERY_DARK_GREEN);
 		srand(UINT(time(0)));
 
-		auto& steps = hint.back().steps;
 
 		if (!bPaused) {
 			if (GetKey(olc::RIGHT).bReleased) ReSetCells(++cellSize);
@@ -286,6 +300,18 @@ public:
 						setLRUD(c);
 				}
 			}
+
+
+			/*	if (GetKey(olc::SPACE).bReleased) {
+					for (auto& c : cells) {
+						if (!c.bState) {
+							setLRUD(c);
+							if(c.changeState())
+								setLRUDdiag(c);
+
+						}
+					}
+				}*/
 
 			for (auto& c : cells) {
 
@@ -304,13 +330,78 @@ public:
 						}
 						cout << c.nIdx << ' ';
 
+						if (hints.at(cellSize - hints.size()).hint.front().btn == LMB) {
 
-						if (hint.back().steps.front() == c.nIdx) {
-							steps.erase(steps.begin());
+							auto& steps = hints.at(cellSize - hints.size()).hint.front().steps;
+							if (!steps.empty()) {
+								if (steps.front() == c.nIdx) {
+									rotate(steps.begin(), steps.begin() + 1, steps.end());
+									//steps.erase(steps.begin());
+									nStep--;
+								}
+								else {
+									steps.insert(steps.begin(), c.nIdx);
+									nStep++;
+								}
+							}
+
+							if (nStep == 0)
+								if (hints.at(cellSize - hints.size()).hint.size() > 1) {
+
+									rotate(hints.at(cellSize - hints.size()).hint.begin(), hints.at(cellSize - hints.size()).hint.begin() + 1, hints.at(cellSize - hints.size()).hint.end());
+									nStep = hints.at(cellSize - hints.size()).hint.front().steps.size();
+								}
 						}
 						else {
-							steps.insert(steps.begin(), c.nIdx);
+
 						}
+
+
+
+						/*switch (cellSize) {
+						case 3:
+						{
+
+							auto& steps = hint1.front().steps;
+							if (steps.front() == c.nIdx) {
+								steps.erase(steps.begin());
+							}
+							else {
+								steps.insert(steps.begin(), c.nIdx);
+							}
+
+							break;
+						}
+						case 4:
+						{
+
+							auto& steps = hint2.front().steps;
+							if (steps.front() == c.nIdx) {
+								steps.erase(steps.begin());
+							}
+							else {
+								steps.insert(steps.begin(), c.nIdx);
+							}
+							break;
+						}
+						case 5:
+						{
+
+							auto& steps = hint3.front().steps;
+							if (steps.front() == c.nIdx) {
+								steps.erase(steps.begin());
+							}
+							else {
+								steps.insert(steps.begin(), c.nIdx);
+							}
+							break;
+						}
+						default:
+							break;
+						}*/
+
+
+
 
 						setLRUD(c);
 						nScore++;
@@ -378,11 +469,48 @@ public:
 			c.draw(*this);
 
 
+			auto& steps = hints.at(cellSize - hints.size()).hint.front().steps;
 			if (!steps.empty()) {
 				if (steps.front() == c.nIdx) {
-					DrawString(c.vPos, to_string(hint.front().steps.size()));
+					olc::Pixel col;
+					if (hints.at(cellSize - hints.size()).hint.front().btn == LMB)
+						col = olc::GREEN;
+					else if (hints.at(cellSize - hints.size()).hint.front().btn == RMB)
+						col = olc::CYAN;
+					else if (hints.at(cellSize - hints.size()).hint.front().btn == MMB)
+						col = olc::GREY;
+					DrawString(c.vPos.x + 2, c.vPos.y + 2, to_string(nStep), col);
 				}
 			}
+
+			/*if (cellSize == 3) {
+				auto& steps = hint1.front().steps;
+				if (!steps.empty()) {
+					if (steps.front() == c.nIdx) {
+						DrawString(c.vPos, to_string(steps.size()));
+					}
+
+				}
+			}
+			if (cellSize == 4) {
+				auto& steps = hint2.front().steps;
+				if (!steps.empty()) {
+					if (steps.front() == c.nIdx) {
+						DrawString(c.vPos, to_string(steps.size()));
+					}
+
+				}
+			}
+
+			if (cellSize == 5) {
+				auto& steps = hint3.front().steps;
+				if (!steps.empty()) {
+					if (steps.front() == c.nIdx) {
+						DrawString(c.vPos, to_string(steps.size()));
+					}
+
+				}
+			}*/
 		}
 
 		if (nCellOn == nTotalCell) {
