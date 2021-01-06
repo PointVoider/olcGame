@@ -46,6 +46,43 @@ struct sCell
 		pge->FillRect(vPos, vSize, color);
 		pge->DrawRect(vPos, vSize, color.inv());
 	}
+
+
+	sCell& getTopCell()
+	{
+		sCell null;
+		sCell* c = this;
+		c -= cellSize;
+		if (c->nUniqey != 69420) return null;
+		return *c;
+	}
+	sCell& getBottomCell()
+	{
+		sCell null;
+		sCell* c = this;
+		c += cellSize;
+		if (c->nUniqey != 69420) return null;
+		return *c;
+	}
+	sCell& getLeftCell()
+	{
+		sCell null;
+		sCell* c = this;
+		c -= 1;
+		if (c->nUniqey != 69420) return null;
+		if (c->vGrid.x == cellSize) return null;
+		return *c;
+	}
+	sCell& getRightCell()
+	{
+		sCell null;
+		sCell* c = this;
+		c += 1;
+		if (c->nUniqey != 69420) return null;
+		if (c->vGrid.x == 1) return null;
+
+		return *c;
+	}
 };
 
 class olcGame : public olc::PixelGameEngine
@@ -375,7 +412,13 @@ public:
 
 			bool pressed = false;
 			for (auto& c : cells) {
-
+				if (c.Inside(GetMousePos()) && GetKey(olc::K).bPressed)
+				{
+					c.getTopCell().Toggle();
+					c.getBottomCell().Toggle();
+					c.getLeftCell().Toggle();
+					c.getRightCell().Toggle();
+				}
 				if (GetMouse(0).bPressed) {
 					if (c.Inside(GetMousePos())) {
 						//////////////////////////////////////////////
