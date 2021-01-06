@@ -346,7 +346,6 @@ public:
 			getLeftCell(c, i).Toggle();
 			getRightCell(c, i).Toggle();
 		}
-		c.Toggle();
 	}
 
 	int lastBtn = -1;
@@ -609,6 +608,11 @@ public:
 				}
 			DrawString(ScreenWidth() - 40 * 3, ScreenHeight() - 30, "WIN!", olc::GREEN, 3);
 		}
+
+
+		if (!cells.empty())
+			if (bHints)
+				DrawString(cells[cellSize - 1].vPos.x + cells[cellSize - 1].vSize.x + 2, cells[cellSize * cellSize - 1].vPos.y + cells[cellSize * cellSize - 1].vSize.y - 10, "Hint ON");
 
 		string sScore = "Total Clicks : " + to_string(nScore);
 		string sTotal = to_string(nCellOn) + "/" + to_string(nTotalCell);
